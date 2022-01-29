@@ -9,10 +9,12 @@ from fastapi_users import models, password
 from fastapi_users.db import BaseUserDatabase
 from fastapi_users.jwt import SecretType, decode_jwt, generate_jwt
 from fastapi_users.password import generate_password, get_password_hash
+from fastapi_users.settings import (
+    RESET_PASSWORD_TOKEN_AUDIENCE,
+    TOKEN_LIFETIME,
+    VERIFY_USER_TOKEN_AUDIENCE,
+)
 from fastapi_users.types import DependencyCallable
-
-RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
-VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
 
 class FastAPIUsersException(Exception):
@@ -65,11 +67,11 @@ class BaseUserManager(Generic[models.UC, models.UD]):
 
     user_db_model: Type[models.UD]
     reset_password_token_secret: SecretType
-    reset_password_token_lifetime_seconds: int = 3600
+    reset_password_token_lifetime_seconds: int = TOKEN_LIFETIME
     reset_password_token_audience: str = RESET_PASSWORD_TOKEN_AUDIENCE
 
     verification_token_secret: SecretType
-    verification_token_lifetime_seconds: int = 3600
+    verification_token_lifetime_seconds: int = TOKEN_LIFETIME
     verification_token_audience: str = VERIFY_USER_TOKEN_AUDIENCE
 
     user_db: BaseUserDatabase[models.UD]

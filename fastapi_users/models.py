@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import List, Optional, TypeVar
 
 from pydantic import UUID4, BaseModel, EmailStr, Field
@@ -48,6 +49,9 @@ class BaseUserUpdate(CreateUpdateDictModel):
 
 
 class BaseUserDB(BaseUser):
+    created_timestamp: datetime = Field(default_factory=datetime.utcnow)
+    updated_timestamp: datetime = Field(default_factory=datetime.utcnow)
+    deleted_timestamp: Optional[datetime]
     hashed_password: str
 
     class Config:

@@ -9,6 +9,7 @@ from fastapi_users.authentication.strategy import (
     BaseAccessToken,
     DatabaseStrategy,
 )
+from fastapi_users.settings import TOKEN_LIFETIME
 
 
 class AccessToken(BaseAccessToken):
@@ -55,7 +56,7 @@ def access_token_database() -> AccessTokenDatabaseMock:
 
 @pytest.fixture
 def database_strategy(access_token_database: AccessTokenDatabaseMock):
-    return DatabaseStrategy(access_token_database, 3600)
+    return DatabaseStrategy(access_token_database, TOKEN_LIFETIME)
 
 
 @pytest.mark.authentication

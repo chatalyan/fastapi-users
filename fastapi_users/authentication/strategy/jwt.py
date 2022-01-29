@@ -10,6 +10,7 @@ from fastapi_users.authentication.strategy.base import (
 )
 from fastapi_users.jwt import SecretType, decode_jwt, generate_jwt
 from fastapi_users.manager import BaseUserManager, UserNotExists
+from fastapi_users.settings import AUTH_TOKEN_AUDIENCE
 
 
 class JWTStrategy(Strategy, Generic[models.UC, models.UD]):
@@ -17,8 +18,10 @@ class JWTStrategy(Strategy, Generic[models.UC, models.UD]):
         self,
         secret: SecretType,
         lifetime_seconds: Optional[int],
-        token_audience: List[str] = ["fastapi-users:auth"],
+        token_audience: List[str] = None,
     ):
+        if token_audience is None:
+            token_audience = [AUTH_TOKEN_AUDIENCE]
         self.secret = secret
         self.lifetime_seconds = lifetime_seconds
         self.token_audience = token_audience
@@ -46,7 +49,11 @@ class JWTStrategy(Strategy, Generic[models.UC, models.UD]):
             return None
 
     async def write_token(self, user: models.UD) -> str:
-        data = {"user_id": str(user.id), "aud": self.token_audience}
+        data = {
+            "user_id": str(user.id),
+            "email": user.email,
+            "aud": self.token_audience,
+        }
         return generate_jwt(data, self.secret, self.lifetime_seconds)
 
     async def destroy_token(self, token: str, user: models.UD) -> None:

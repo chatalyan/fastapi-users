@@ -4,6 +4,7 @@ from typing import Dict, Optional, Tuple
 import pytest
 
 from fastapi_users.authentication.strategy import RedisStrategy
+from fastapi_users.settings import TOKEN_LIFETIME
 
 
 class RedisMock:
@@ -41,7 +42,7 @@ def redis() -> RedisMock:
 
 @pytest.fixture
 def redis_strategy(redis):
-    return RedisStrategy(redis, 3600)
+    return RedisStrategy(redis, TOKEN_LIFETIME)
 
 
 @pytest.mark.authentication

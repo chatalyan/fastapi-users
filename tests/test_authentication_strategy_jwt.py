@@ -5,19 +5,18 @@ from fastapi_users.authentication.strategy import (
     StrategyDestroyNotSupportedError,
 )
 from fastapi_users.jwt import SecretType, decode_jwt, generate_jwt
-
-LIFETIME = 3600
+from fastapi_users.settings import AUTH_TOKEN_AUDIENCE, TOKEN_LIFETIME
 
 
 @pytest.fixture
 def jwt_strategy(secret: SecretType):
-    return JWTStrategy(secret, LIFETIME)
+    return JWTStrategy(secret, TOKEN_LIFETIME)
 
 
 @pytest.fixture
 def token(secret):
-    def _token(user_id=None, lifetime=LIFETIME):
-        data = {"aud": "fastapi-users:auth"}
+    def _token(user_id=None, lifetime=TOKEN_LIFETIME):
+        data = {"aud": AUTH_TOKEN_AUDIENCE}
         if user_id is not None:
             data["user_id"] = str(user_id)
         return generate_jwt(data, secret, lifetime)

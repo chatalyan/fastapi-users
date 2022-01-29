@@ -8,6 +8,7 @@ from fastapi_users.authentication import (
     JWTStrategy,
 )
 from fastapi_users.db import MongoDBUserDatabase
+from fastapi_users.settings import TOKEN_LIFETIME
 
 from app.db import get_user_db
 from app.models import User, UserCreate, UserDB, UserUpdate
@@ -42,7 +43,7 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+    return JWTStrategy(secret=SECRET, lifetime_seconds=TOKEN_LIFETIME)
 
 
 auth_backend = AuthenticationBackend(

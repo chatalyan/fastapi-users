@@ -95,6 +95,28 @@ class TestAuthorize:
         data = response.json()
         assert "authorization_url" in data
 
+    async def test_with_follow_redirect_url(
+        self,
+        async_method_mocker: AsyncMethodMocker,
+        test_app_client_redirect_url: httpx.AsyncClient,
+        oauth_client: BaseOAuth2,
+    ):
+        get_authorization_url_mock = async_method_mocker(
+            oauth_client, "get_authorization_url", return_value="AUTHORIZATION_URL"
+        )
+
+        response = await test_app_client_redirect_url.get(
+            "/authorize",
+            params={
+                "scopes": ["scope1", "scope2"],
+                "follow_redirect": True,
+                "p_redirect_url": "https://www.tintagel.bt/callback",
+            },
+        )
+
+        assert response.status_code == status.HTTP_307_TEMPORARY_REDIRECT
+        get_authorization_url_mock.assert_called_once()
+
 
 @pytest.mark.router
 @pytest.mark.oauth

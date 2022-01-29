@@ -1,18 +1,18 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from httpx_oauth.integrations.fastapi import OAuth2AuthorizeCallback
 from httpx_oauth.oauth2 import BaseOAuth2, OAuth2Token
 from pydantic import BaseModel
+from starlette.responses import RedirectResponse
 
 from fastapi_users import models
 from fastapi_users.authentication import AuthenticationBackend, Strategy
 from fastapi_users.jwt import SecretType, decode_jwt, generate_jwt
 from fastapi_users.manager import BaseUserManager, UserManagerDependency
 from fastapi_users.router.common import ErrorCode, ErrorModel
-
-STATE_TOKEN_AUDIENCE = "fastapi-users:oauth-state"
+from fastapi_users.settings import STATE_TOKEN_AUDIENCE, TOKEN_LIFETIME
 
 
 class OAuth2AuthorizeResponse(BaseModel):
@@ -20,7 +20,7 @@ class OAuth2AuthorizeResponse(BaseModel):
 
 
 def generate_state_token(
-    data: Dict[str, str], secret: SecretType, lifetime_seconds: int = 3600
+    data: Dict[str, str], secret: SecretType, lifetime_seconds: int = TOKEN_LIFETIME
 ) -> str:
     data["aud"] = STATE_TOKEN_AUDIENCE
     return generate_jwt(data, secret, lifetime_seconds)
@@ -54,9 +54,14 @@ def get_oauth_router(
         response_model=OAuth2AuthorizeResponse,
     )
     async def authorize(
-        request: Request, scopes: List[str] = Query(None)
-    ) -> OAuth2AuthorizeResponse:
-        if redirect_url is not None:
+        request: Request,
+        p_redirect_url: str = None,
+        follow_redirect: bool = False,
+        scopes: List[str] = Query(None),
+    ) -> Union[OAuth2AuthorizeResponse, RedirectResponse]:
+        if p_redirect_url is not None:
+            authorize_redirect_url = p_redirect_url
+        elif redirect_url is not None:
             authorize_redirect_url = redirect_url
         else:
             authorize_redirect_url = request.url_for(callback_route_name)
@@ -69,6 +74,8 @@ def get_oauth_router(
             scopes,
         )
 
+        if follow_redirect:
+            return RedirectResponse(authorization_url)
         return OAuth2AuthorizeResponse(authorization_url=authorization_url)
 
     @router.get(
