@@ -31,16 +31,16 @@ def get_oauth_router(
     backend: AuthenticationBackend,
     get_user_manager: UserManagerDependency[models.UC, models.UD],
     state_secret: SecretType,
-    redirect_url: str = None,
+    initial_redirect_url: str = None,
 ) -> APIRouter:
     """Generate a router with the OAuth routes."""
     router = APIRouter()
     callback_route_name = f"oauth:{oauth_client.name}.{backend.name}.callback"
 
-    if redirect_url is not None:
+    if initial_redirect_url is not None:
         oauth2_authorize_callback = OAuth2AuthorizeCallback(
             oauth_client,
-            redirect_url=redirect_url,
+            redirect_url=initial_redirect_url,
         )
     else:
         oauth2_authorize_callback = OAuth2AuthorizeCallback(
@@ -55,14 +55,14 @@ def get_oauth_router(
     )
     async def authorize(
         request: Request,
-        p_redirect_url: str = None,
+        redirect_url: str = None,
         follow_redirect: bool = False,
         scopes: List[str] = Query(None),
     ) -> Union[OAuth2AuthorizeResponse, RedirectResponse]:
-        if p_redirect_url is not None:
-            authorize_redirect_url = p_redirect_url
-        elif redirect_url is not None:
+        if redirect_url is not None:
             authorize_redirect_url = redirect_url
+        elif initial_redirect_url is not None:
+            authorize_redirect_url = initial_redirect_url
         else:
             authorize_redirect_url = request.url_for(callback_route_name)
 
