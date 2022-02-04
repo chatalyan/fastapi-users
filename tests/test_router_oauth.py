@@ -110,7 +110,7 @@ class TestAuthorize:
             params={
                 "scopes": ["scope1", "scope2"],
                 "follow_redirect": True,
-                "p_redirect_url": "https://www.tintagel.bt/callback",
+                "redirect_url": "https://www.tintagel.bt/callback",
             },
         )
 
