@@ -58,6 +58,8 @@ def get_oauth_router(
         redirect_url: str = None,
         follow_redirect: bool = False,
         scopes: List[str] = Query(None),
+        code_challenge: str = None,
+        code_challenge_method: str = None,
     ) -> Union[OAuth2AuthorizeResponse, RedirectResponse]:
         if redirect_url is not None:
             authorize_redirect_url = redirect_url
@@ -72,6 +74,10 @@ def get_oauth_router(
             authorize_redirect_url,
             state,
             scopes,
+            extras_params={
+                "code_challenge": code_challenge,
+                "code_challenge_method": code_challenge_method
+            },
         )
 
         if follow_redirect:
