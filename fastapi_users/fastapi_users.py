@@ -102,6 +102,7 @@ class FastAPIUsers(Generic[models.U, models.UC, models.UU, models.UD]):
         backend: AuthenticationBackend,
         state_secret: SecretType,
         redirect_url: str = None,
+        follow_redirect: bool = False,
     ) -> APIRouter:
         """
         Return an OAuth router for a given OAuth client and authentication backend.
@@ -110,6 +111,7 @@ class FastAPIUsers(Generic[models.U, models.UC, models.UU, models.UD]):
         :param backend: The authentication backend instance.
         :param state_secret: Secret used to encode the state JWT.
         :param redirect_url: Optional arbitrary redirect URL for the OAuth2 flow.
+        :param follow_redirect: Whether to follow the redirect URL or not.
         If not given, the URL to the callback endpoint will be generated.
         """
         return get_oauth_router(
@@ -118,6 +120,7 @@ class FastAPIUsers(Generic[models.U, models.UC, models.UU, models.UD]):
             self.get_user_manager,
             state_secret,
             redirect_url,
+            follow_redirect,
         )
 
     def get_users_router(

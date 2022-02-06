@@ -32,6 +32,7 @@ def get_oauth_router(
     get_user_manager: UserManagerDependency[models.UC, models.UD],
     state_secret: SecretType,
     initial_redirect_url: str = None,
+    initial_follow_redirect: bool = False,
 ) -> APIRouter:
     """Generate a router with the OAuth routes."""
     router = APIRouter()
@@ -80,7 +81,7 @@ def get_oauth_router(
             },
         )
 
-        if follow_redirect:
+        if follow_redirect or initial_follow_redirect:
             return RedirectResponse(authorization_url)
         return OAuth2AuthorizeResponse(authorization_url=authorization_url)
 
