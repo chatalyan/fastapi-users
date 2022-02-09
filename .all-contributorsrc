@@ -462,6 +462,24 @@
         "code",
         "bug"
       ]
+    },
+    {
+      "login": "lthurner",
+      "name": "Leon Thurner",
+      "avatar_url": "https://avatars.githubusercontent.com/u/23637821?v=4",
+      "profile": "http://www.retoflow.de",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "mekanix",
+      "name": "Goran Mekić",
+      "avatar_url": "https://avatars.githubusercontent.com/u/610855?v=4",
+      "profile": "http://meka.rs",
+      "contributions": [
+        "platform"
+      ]
     }
   ],
   "contributorsPerLine": 7,
