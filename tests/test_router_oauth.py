@@ -12,13 +12,14 @@ from tests.conftest import AsyncMethodMocker, UserDB, UserManagerMock
 
 @pytest.fixture
 def app_factory(secret, get_user_manager_oauth, mock_authentication, oauth_client):
-    def _app_factory(redirect_url: str = None) -> FastAPI:
+    def _app_factory(redirect_url: str = None, follow_redirects: bool = False) -> FastAPI:
         oauth_router = get_oauth_router(
             oauth_client,
             mock_authentication,
             get_user_manager_oauth,
             secret,
             redirect_url,
+            follow_redirects,
         )
         app = FastAPI()
         app.include_router(oauth_router)
@@ -38,6 +39,11 @@ def test_app_redirect_url(app_factory):
 
 
 @pytest.fixture
+def test_app_follow_redirects(app_factory):
+    return app_factory("http://www.tintagel.bt/callback", follow_redirects=True)
+
+
+@pytest.fixture
 @pytest.mark.asyncio
 async def test_app_client(test_app, get_test_client):
     async for client in get_test_client(test_app):
@@ -48,6 +54,13 @@ async def test_app_client(test_app, get_test_client):
 @pytest.mark.asyncio
 async def test_app_client_redirect_url(test_app_redirect_url, get_test_client):
     async for client in get_test_client(test_app_redirect_url):
+        yield client
+
+
+@pytest.fixture
+@pytest.mark.asyncio
+async def test_app_client_follow_redirects(test_app_follow_redirects, get_test_client):
+    async for client in get_test_client(test_app_follow_redirects):
         yield client
 
 
@@ -98,19 +111,17 @@ class TestAuthorize:
     async def test_with_follow_redirect_url(
         self,
         async_method_mocker: AsyncMethodMocker,
-        test_app_client_redirect_url: httpx.AsyncClient,
+        test_app_client_follow_redirects: httpx.AsyncClient,
         oauth_client: BaseOAuth2,
     ):
         get_authorization_url_mock = async_method_mocker(
             oauth_client, "get_authorization_url", return_value="AUTHORIZATION_URL"
         )
 
-        response = await test_app_client_redirect_url.get(
+        response = await test_app_client_follow_redirects.get(
             "/authorize",
             params={
                 "scopes": ["scope1", "scope2"],
-                "follow_redirect": True,
-                "redirect_url": "https://www.tintagel.bt/callback",
             },
         )
 
