@@ -160,7 +160,10 @@ class BaseUserManager(Generic[models.UC, models.UD]):
         return created_user
 
     async def oauth_callback(
-        self, oauth_account: models.BaseOAuthAccount, request: Optional[Request] = None
+        self,
+        oauth_account: models.BaseOAuthAccount,
+        extra_data: Dict = None,
+        request: Optional[Request] = None,
     ) -> models.UD:
         """
         Handle the callback after a successful OAuth authentication.
@@ -174,11 +177,14 @@ class BaseUserManager(Generic[models.UC, models.UD]):
         is triggered.
 
         :param oauth_account: The new OAuth account to create.
+        :param extra_data: Extra data to store in the OAuth account. (eg: first_name, last_name, picture)
         :param request: Optional FastAPI request that
         triggered the operation, defaults to None
         :return: A user.
         """
         try:
+            if extra_data is None:
+                extra_data = {}
             user = await self.get_by_oauth_account(
                 oauth_account.oauth_name, oauth_account.account_id
             )
@@ -196,6 +202,26 @@ class BaseUserManager(Generic[models.UC, models.UD]):
                     hashed_password=get_password_hash(password),
                     oauth_accounts=[oauth_account],
                 )
+
+                if (
+                    hasattr(user, "first_name")
+                    and extra_data.get("first_name") is not None
+                ):
+                    user.first_name = extra_data.get("first_name")
+
+                if (
+                    hasattr(user, "last_name")
+                    and extra_data.get("last_name") is not None
+                ):
+                    user.last_name = extra_data.get("last_name")
+
+                if (
+                    hasattr(user, "picture")
+                    and extra_data.get("picture", {}).get("url") is not None
+                    and extra_data.get("picture", {}).get("default") is False
+                ):
+                    user.picture = extra_data.get("picture").get("url")
+
                 await self.user_db.create(user)
                 await self.on_after_register(user, request)
         else:

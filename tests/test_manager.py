@@ -202,6 +202,36 @@ class TestOAuthCallback:
 
         assert user_manager_oauth.on_after_register.called is True
 
+    async def test_new_user_extra_data(self, user_manager_oauth: UserManagerMock):
+        oauth_account = models.BaseOAuthAccount(
+            oauth_name="service1",
+            access_token="TOKEN",
+            expires_at=1579000751,
+            account_id="new_user_oauth1",
+            account_email="galahad@camelot.bt",
+        )
+        extra_data = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "picture": {
+                "url": "https://example.com/john.jpg",
+                "default": False,
+            },
+        }
+        user = cast(
+            UserDBOAuth,
+            await user_manager_oauth.oauth_callback(oauth_account, extra_data),
+        )
+
+        assert user.email == "galahad@camelot.bt"
+        assert len(user.oauth_accounts) == 1
+        assert user.oauth_accounts[0].id == oauth_account.id
+        assert user.first_name == "John"
+        assert user.last_name == "Doe"
+        assert user.picture == "https://example.com/john.jpg"
+
+        assert user_manager_oauth.on_after_register.called is True
+
 
 @pytest.mark.asyncio
 @pytest.mark.manager

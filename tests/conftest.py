@@ -33,6 +33,8 @@ excalibur_password_hash = get_password_hash("excalibur")
 
 class User(models.BaseUser):
     first_name: Optional[str]
+    last_name: Optional[str]
+    picture: Optional[str]
 
 
 class UserCreate(models.BaseUserCreate):

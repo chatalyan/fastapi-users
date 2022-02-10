@@ -73,7 +73,7 @@ def get_oauth_router(
             scopes,
             extras_params={
                 "code_challenge": code_challenge,
-                "code_challenge_method": code_challenge_method
+                "code_challenge_method": code_challenge_method,
             },
         )
 
@@ -115,7 +115,7 @@ def get_oauth_router(
         strategy: Strategy[models.UC, models.UD] = Depends(backend.get_strategy),
     ):
         token, state = access_token_state
-        account_id, account_email = await oauth_client.get_id_email(
+        account_id, account_email, extra_data = await oauth_client.get_id_email(
             token["access_token"]
         )
 
@@ -133,7 +133,7 @@ def get_oauth_router(
             account_email=account_email,
         )
 
-        user = await user_manager.oauth_callback(new_oauth_account, request)
+        user = await user_manager.oauth_callback(new_oauth_account, extra_data, request)
 
         if not user.is_active:
             raise HTTPException(

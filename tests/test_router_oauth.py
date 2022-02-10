@@ -12,7 +12,9 @@ from tests.conftest import AsyncMethodMocker, UserDB, UserManagerMock
 
 @pytest.fixture
 def app_factory(secret, get_user_manager_oauth, mock_authentication, oauth_client):
-    def _app_factory(redirect_url: str = None, follow_redirects: bool = False) -> FastAPI:
+    def _app_factory(
+        redirect_url: str = None, follow_redirects: bool = False
+    ) -> FastAPI:
         oauth_router = get_oauth_router(
             oauth_client,
             mock_authentication,
@@ -150,7 +152,9 @@ class TestCallback:
     ):
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         get_id_email_mock = async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
 
         response = await test_app_client.get(
@@ -173,7 +177,9 @@ class TestCallback:
         state_jwt = generate_state_token({}, "SECRET")
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback", return_value=user_oauth
@@ -203,7 +209,7 @@ class TestCallback:
         async_method_mocker(
             oauth_client,
             "get_id_email",
-            return_value=("user_oauth1", inactive_user_oauth.email),
+            return_value=("user_oauth1", inactive_user_oauth.email, {}),
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback", return_value=inactive_user_oauth
@@ -230,7 +236,9 @@ class TestCallback:
             oauth_client, "get_access_token", return_value=access_token
         )
         async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback", return_value=user_oauth
@@ -244,7 +252,7 @@ class TestCallback:
         assert response.status_code == status.HTTP_200_OK
 
         get_access_token_mock.assert_called_once_with(
-            "CODE", "http://www.tintagel.bt/callback"
+            "CODE", "http://www.tintagel.bt/callback", None
         )
 
         data = cast(Dict[str, Any], response.json())
