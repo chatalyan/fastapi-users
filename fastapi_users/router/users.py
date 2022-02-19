@@ -9,6 +9,7 @@ from fastapi_users.manager import (
     BaseUserManager,
     InvalidPasswordException,
     UserAlreadyExists,
+    UserHasLinkedOAuthAccount,
     UserManagerDependency,
     UserNotExists,
 )
@@ -77,6 +78,12 @@ def get_users_router(
                                     "detail": ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS
                                 },
                             },
+                            ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS: {
+                                "summary": "A user with this email already exists.",
+                                "value": {
+                                    "detail": ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS
+                                },
+                            },
                             ErrorCode.UPDATE_USER_INVALID_PASSWORD: {
                                 "summary": "Password validation failed.",
                                 "value": {
@@ -115,6 +122,11 @@ def get_users_router(
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+            )
+        except UserHasLinkedOAuthAccount:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=ErrorCode.UPDATE_USER_HAS_LINKED_OAUTH_ACCOUNT,
             )
 
     @router.get(

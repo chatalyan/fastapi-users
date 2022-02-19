@@ -37,6 +37,10 @@ class UserAlreadyVerified(FastAPIUsersException):
     pass
 
 
+class UserHasLinkedOAuthAccount(FastAPIUsersException):
+    pass
+
+
 class InvalidVerifyToken(FastAPIUsersException):
     pass
 
@@ -109,6 +113,16 @@ class BaseUserManager(Generic[models.UC, models.UD]):
 
         return user
 
+    async def has_user_linked_oauth_account(self, id: UUID4) -> bool:
+        """
+        Check if a user has linked an oauth account.
+
+        :param id: Id. of the user to check.
+        :return: True if the user has linked an oauth account, False otherwise.
+        """
+        user = await self.user_db.get(id)
+        return hasattr(user, "oauth_accounts") and len(user.oauth_accounts) > 0
+
     async def get_by_oauth_account(self, oauth: str, account_id: str) -> models.UD:
         """
         Get a user by OAuth account.
@@ -177,7 +191,7 @@ class BaseUserManager(Generic[models.UC, models.UD]):
         is triggered.
 
         :param oauth_account: The new OAuth account to create.
-        :param extra_data: Extra data to store in the OAuth account. (eg: first_name, last_name, picture)
+        :param extra_data: Extra data to store in the OAuth account.
         :param request: Optional FastAPI request that
         triggered the operation, defaults to None
         :return: A user.
@@ -573,6 +587,8 @@ class BaseUserManager(Generic[models.UC, models.UD]):
                     await self.get_by_email(value)
                     raise UserAlreadyExists()
                 except UserNotExists:
+                    if await self.has_user_linked_oauth_account(user.id):
+                        raise UserHasLinkedOAuthAccount()
                     user.email = value
                     user.is_verified = False
             elif field == "password":

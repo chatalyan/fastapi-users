@@ -387,6 +387,25 @@ class TestUpdateMe:
         updated_user = mock_user_db.update.call_args[0][0]
         assert updated_user.hashed_password != current_hashed_password
 
+    async def test_change_email_to_oauth_linked_account(
+        self,
+        test_app_client: Tuple[httpx.AsyncClient, bool],
+        user_oauth: UserDB,
+    ):
+        client, requires_verification = test_app_client
+        response = await client.patch(
+            "/me",
+            json={"email": "king.arthur.2@camelot.bt"},
+            headers={"Authorization": f"Bearer {user_oauth.id}"},
+        )
+        print(user_oauth)
+        if requires_verification:
+            assert response.status_code == status.HTTP_403_FORBIDDEN
+        else:
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            data = cast(Dict[str, Any], response.json())
+            assert data["detail"] == ErrorCode.UPDATE_USER_HAS_LINKED_OAUTH_ACCOUNT
+
 
 @pytest.mark.router
 @pytest.mark.asyncio
