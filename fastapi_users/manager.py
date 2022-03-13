@@ -232,7 +232,7 @@ class BaseUserManager(Generic[models.UC, models.UD]):
                 if (
                     hasattr(user, "picture")
                     and extra_data.get("picture", {}).get("url") is not None
-                    and extra_data.get("picture", {}).get("default") is False
+                    and extra_data.get("picture", {}).get("default") in [False, None]
                 ):
                     user.picture = extra_data.get("picture").get("url")
 
