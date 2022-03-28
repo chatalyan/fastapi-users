@@ -45,7 +45,7 @@ def get_auth_router(
 
     @router.post(
         "/login",
-        name=f"auth:{backend.name}.login",
+        name=f"{backend.name}.login",
         responses=login_responses,
     )
     async def login(
@@ -78,7 +78,9 @@ def get_auth_router(
     }
 
     @router.post(
-        "/logout", name=f"auth:{backend.name}.logout", responses=logout_responses
+        "/logout",
+        name=f"{backend.name}.logout",
+        responses=logout_responses,
     )
     async def logout(
         response: Response,

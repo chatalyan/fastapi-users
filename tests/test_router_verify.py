@@ -115,7 +115,7 @@ class TestVerifyTokenRequest:
 
         app = FastAPI()
         app.include_router(verify_router)
-        assert app.url_path_for("verify:request-token") == "/request-verify-token"
+        assert app.url_path_for("request_verify_token") == "/request-verify-token"
 
 
 @pytest.mark.router
@@ -191,4 +191,4 @@ class TestVerify:
 
         app = FastAPI()
         app.include_router(verify_router)
-        assert app.url_path_for("verify:verify") == "/verify"
+        assert app.url_path_for("verify") == "/verify"

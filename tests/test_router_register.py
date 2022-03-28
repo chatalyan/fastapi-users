@@ -114,4 +114,4 @@ async def test_register_namespace(get_user_manager):
             UserCreate,
         )
     )
-    assert app.url_path_for("register:register") == "/register"
+    assert app.url_path_for("register") == "/register"

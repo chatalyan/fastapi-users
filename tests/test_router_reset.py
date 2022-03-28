@@ -154,11 +154,11 @@ class TestResetPassword:
 async def test_forgot_password_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_reset_password_router(get_user_manager))
-    assert app.url_path_for("reset:forgot_password") == "/forgot-password"
+    assert app.url_path_for("forgot_password") == "/forgot-password"
 
 
 @pytest.mark.asyncio
 async def test_reset_password_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_reset_password_router(get_user_manager))
-    assert app.url_path_for("reset:reset_password") == "/reset-password"
+    assert app.url_path_for("reset_password") == "/reset-password"

@@ -46,7 +46,6 @@ def get_users_router(
     @router.get(
         "/me",
         response_model=user_model,
-        name="users:current_user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 "description": "Missing token or inactive user.",
@@ -62,7 +61,6 @@ def get_users_router(
         "/me",
         response_model=user_model,
         dependencies=[Depends(get_current_active_user)],
-        name="users:current_user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 "description": "Missing token or inactive user.",
@@ -133,7 +131,6 @@ def get_users_router(
         "/{id:uuid}",
         response_model=user_model,
         dependencies=[Depends(get_current_superuser)],
-        name="users:user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 "description": "Missing token or inactive user.",
@@ -153,7 +150,6 @@ def get_users_router(
         "/{id:uuid}",
         response_model=user_model,
         dependencies=[Depends(get_current_superuser)],
-        name="users:user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 "description": "Missing token or inactive user.",
@@ -220,7 +216,6 @@ def get_users_router(
         status_code=status.HTTP_204_NO_CONTENT,
         response_class=Response,
         dependencies=[Depends(get_current_superuser)],
-        name="users:user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 "description": "Missing token or inactive user.",

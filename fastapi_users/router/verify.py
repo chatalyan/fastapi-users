@@ -24,7 +24,6 @@ def get_verify_router(
     @router.post(
         "/request-verify-token",
         status_code=status.HTTP_202_ACCEPTED,
-        name="verify:request-token",
     )
     async def request_verify_token(
         request: Request,
@@ -42,7 +41,6 @@ def get_verify_router(
     @router.post(
         "/verify",
         response_model=user_model,
-        name="verify:verify",
         responses={
             status.HTTP_400_BAD_REQUEST: {
                 "model": ErrorModel,

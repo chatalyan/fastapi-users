@@ -24,7 +24,6 @@ def get_register_router(
         "/register",
         response_model=user_model,
         status_code=status.HTTP_201_CREATED,
-        name="register:register",
         responses={
             status.HTTP_400_BAD_REQUEST: {
                 "model": ErrorModel,

@@ -99,7 +99,7 @@ class TestMe:
         assert data["email"] == verified_user.email
 
     async def test_current_user_namespace(self, app_factory):
-        assert app_factory(True).url_path_for("users:current_user") == "/me"
+        assert app_factory(True).url_path_for("me") == "/me"
 
 
 @pytest.mark.router
@@ -503,7 +503,7 @@ class TestGetUser:
         assert "hashed_password" not in data
 
     async def test_get_user_namespace(self, app_factory, user: UserDB):
-        assert app_factory(True).url_path_for("users:user", id=user.id) == f"/{user.id}"
+        assert app_factory(True).url_path_for("get_user", id=user.id) == f"/{user.id}"
 
 
 @pytest.mark.router

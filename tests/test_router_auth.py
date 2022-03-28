@@ -211,8 +211,8 @@ class TestLogout:
 @pytest.mark.router
 async def test_route_names(app_factory, mock_authentication):
     app = app_factory(False)
-    login_route_name = f"auth:{mock_authentication.name}.login"
+    login_route_name = f"{mock_authentication.name}.login"
     assert app.url_path_for(login_route_name) == "/mock/login"
 
-    logout_route_name = f"auth:{mock_authentication.name}.logout"
+    logout_route_name = f"{mock_authentication.name}.logout"
     assert app.url_path_for(logout_route_name) == "/mock/logout"
