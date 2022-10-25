@@ -64,7 +64,7 @@ dependencies = [
 
 [project.optional-dependencies]
 sqlalchemy = [
-    "fastapi-users-db-sqlalchemy >=1.1.0,<2.0.0",
+    "fastapi-users-db-sqlalchemy >=1.1.0,<5.0.0",
 ]
 sqlalchemy2 = [
     "fastapi-users-db-sqlalchemy >=2.0.0",
