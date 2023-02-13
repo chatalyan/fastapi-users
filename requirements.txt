@@ -6,4 +6,4 @@ python-multipart ==0.0.5
 makefun >=1.11.2,<1.14
 
 aioredis >=2.0.1,<2.1.0
-hiredis >=2.0.0,<2.1.0
+hiredis >=2.0.0,<2.3.0
