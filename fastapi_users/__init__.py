@@ -1,17 +1,23 @@
 """Ready-to-use and customizable users management for FastAPI."""
 
-__version__ = "9.2.11"
+__version__ = "10.4.1"
 
-from fastapi_users import models  # noqa: F401
+from fastapi_users import models, schemas  # noqa: F401
+from fastapi_users.exceptions import InvalidID, InvalidPasswordException
 from fastapi_users.fastapi_users import FastAPIUsers  # noqa: F401
 from fastapi_users.manager import (  # noqa: F401
     BaseUserManager,
-    InvalidPasswordException,
+    IntegerIDMixin,
+    UUIDIDMixin,
 )
 
 __all__ = [
     "models",
+    "schemas",
     "FastAPIUsers",
     "BaseUserManager",
     "InvalidPasswordException",
+    "InvalidID",
+    "UUIDIDMixin",
+    "IntegerIDMixin",
 ]

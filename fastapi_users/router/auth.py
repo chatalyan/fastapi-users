@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from fastapi_users import models
@@ -12,7 +12,7 @@ from fastapi_users.router.common import ErrorCode, ErrorModel
 
 def get_auth_router(
     backend: AuthenticationBackend,
-    get_user_manager: UserManagerDependency[models.UC, models.UD],
+    get_user_manager: UserManagerDependency[models.UP, models.ID],
     authenticator: Authenticator,
     requires_verification: bool = False,
 ) -> APIRouter:
@@ -49,10 +49,11 @@ def get_auth_router(
         responses=login_responses,
     )
     async def login(
+        request: Request,
         response: Response,
         credentials: OAuth2PasswordRequestForm = Depends(),
-        user_manager: BaseUserManager[models.UC, models.UD] = Depends(get_user_manager),
-        strategy: Strategy[models.UC, models.UD] = Depends(backend.get_strategy),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
     ):
         user = await user_manager.authenticate(credentials)
 
@@ -66,7 +67,9 @@ def get_auth_router(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.LOGIN_USER_NOT_VERIFIED,
             )
-        return await backend.login(strategy, user, response)
+        login_return = await backend.login(strategy, user, response)
+        await user_manager.on_after_login(user, request)
+        return login_return
 
     logout_responses: OpenAPIResponseType = {
         **{
@@ -84,8 +87,8 @@ def get_auth_router(
     )
     async def logout(
         response: Response,
-        user_token: Tuple[models.UD, str] = Depends(get_current_user_token),
-        strategy: Strategy[models.UC, models.UD] = Depends(backend.get_strategy),
+        user_token: Tuple[models.UP, str] = Depends(get_current_user_token),
+        strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
     ):
         user, token = user_token
         return await backend.logout(strategy, user, token, response)

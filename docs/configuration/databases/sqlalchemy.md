@@ -2,9 +2,6 @@
 
 **FastAPI Users** provides the necessary tools to work with SQL databases thanks to [SQLAlchemy ORM with asyncio](https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html).
 
-!!! warning
-    The previous adapter using `encode/databases` is now deprecated but can still be installed using `fastapi-users[sqlalchemy]`.
-
 ## Asynchronous driver
 
 To work with your DBMS, you'll need to install the corresponding asyncio driver. The common choices are:
@@ -12,17 +9,32 @@ To work with your DBMS, you'll need to install the corresponding asyncio driver.
 * For PostgreSQL: `pip install asyncpg`
 * For SQLite: `pip install aiosqlite`
 
-For the sake of this tutorial from now on, we'll use a simple SQLite databse.
+Examples of `DB_URL`s are:
 
-## Setup User table
+* PostgreSQL: `engine = create_engine('postgresql+asyncpg://user:password@host:port/name')`
+* SQLite: `engine = create_engine('sqlite+aiosqlite:///name.db')`
 
-Let's declare our SQLAlchemy `User` table.
+For the sake of this tutorial from now on, we'll use a simple SQLite database.
 
-```py hl_lines="15 16"
+## Create the User model
+
+As for any SQLAlchemy ORM model, we'll create a `User` model.
+
+```py hl_lines="15-16"
 --8<-- "docs/src/db_sqlalchemy.py"
 ```
 
-As you can see, **FastAPI Users** provides a mixin that will include base fields for our `User` table. You can of course add you own fields there to fit to your needs!
+As you can see, **FastAPI Users** provides a base class that will include base fields for our `User` table. You can of course add you own fields there to fit to your needs!
+
+!!! tip "Primary key is defined as UUID"
+    By default, we use UUID as a primary key ID for your user. If you want to use another type, like an auto-incremented integer, you can use `SQLAlchemyBaseUserTable` as base class and define your own `id` column.
+
+    ```py
+    class User(SQLAlchemyBaseUserTable[int], Base):
+        id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ```
+
+    Notice that `SQLAlchemyBaseUserTable` expects a generic type to define the actual type of ID you use.
 
 ## Implement a function to create the tables
 
@@ -47,8 +59,7 @@ The database adapter of **FastAPI Users** makes the link between your database c
 
 Notice that we define first a `get_async_session` dependency returning us a fresh SQLAlchemy session to interact with the database.
 
-It's then used inside the `get_user_db` dependency to generate our adapter. Notice that we pass it three things:
+It's then used inside the `get_user_db` dependency to generate our adapter. Notice that we pass it two things:
 
-* A reference to your [`UserDB` model](../models.md).
 * The `session` instance we just injected.
-* The `UserTable` variable, which is the actual SQLAlchemy model.
+* The `User` class, which is the actual SQLAlchemy model.

@@ -9,6 +9,14 @@ ignore_missing_imports = true
 module = "passlib.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "fastapi_users_db_beanie.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "fastapi_users_db_sqlalchemy.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = "--ignore=test_build.py"
@@ -23,13 +31,75 @@ markers = [
 	"router",
 ]
 
+[tool.ruff]
+
+[tool.hatch]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.version]
+source = "regex_commit"
+commit_extra_args = ["-e"]
+path = "fastapi_users/__init__.py"
+
+[tool.hatch.envs.default]
+features = [
+    "sqlalchemy",
+    "beanie",
+    "oauth",
+    "redis",
+]
+dependencies = [
+    "pytest",
+    "isort",
+    "pytest-asyncio",
+    "mike",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocs-mermaid2-plugin",
+    "black",
+    "mypy",
+    "pytest-cov",
+    "pytest-mock",
+    "markdown-include",
+    "pygments",
+    "pymdown-extensions",
+    "httpx-oauth",
+    "httpx",
+    "asgi_lifespan",
+    "uvicorn",
+    "types-redis",
+    "ruff",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest --cov=fastapi_users/ --cov-report=term-missing --cov-fail-under=100"
+test-cov-xml = "pytest --cov=fastapi_users/ --cov-report=xml --cov-fail-under=100"
+lint = [
+  "isort ./fastapi_users ./tests",
+  "isort ./docs/src -o fastapi_users",
+  "isort ./examples -o fastapi_users -p app",
+  "black . ",
+  "ruff --fix .",
+  "mypy fastapi_users/",
+]
+lint-check = [
+  "isort --check-only ./fastapi_users ./tests",
+  "isort --check-only  ./docs/src -o fastapi_users",
+  "isort --check-only ./examples -o fastapi_users -p app",
+  "black --check .",
+  "ruff .",
+  "mypy fastapi_users/",
+]
+docs = "mkdocs serve"
+
+[tool.hatch.build.targets.sdist]
+support-legacy = true  # Create setup.py
+
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
-
-
-[tool.flit.module]
-name = "fastapi_users"
+requires = ["hatchling", "hatch-regex-commit"]
+build-backend = "hatchling.build"
 
 [project]
 name = "fastapi-users"
@@ -49,42 +119,35 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Internet :: WWW/HTTP :: Session",
 ]
 requires-python = ">=3.7"
 dependencies = [
-    "fastapi >=0.65.2,<0.74.0",
+    "fastapi >=0.65.2",
     "passlib[bcrypt] ==1.7.4",
-    "email-validator >=1.1.0,<1.2",
-    "pyjwt ==2.3.0",
-    "python-multipart ==0.0.5",
-    "makefun >=1.11.2,<1.14",
+    "email-validator >=1.1.0,<1.4",
+    "pyjwt[crypto] ==2.6.0",
+    "python-multipart ==0.0.6",
+    "makefun >=1.11.2,<2.0.0",
+    "typing-extensions >=4.1.1; python_version < '3.8'",
 ]
 
 [project.optional-dependencies]
 sqlalchemy = [
-    "fastapi-users-db-sqlalchemy >=1.1.0,<2.0.0",
+    "fastapi-users-db-sqlalchemy >=4.0.0",
 ]
-sqlalchemy2 = [
-    "fastapi-users-db-sqlalchemy >=2.0.0",
-]
-mongodb = [
-    "fastapi-users-db-mongodb >=1.1.0",
-]
-tortoise-orm = [
-    "fastapi-users-db-tortoise >=1.1.0",
-]
-ormar = [
-    "fastapi-users-db-ormar >=1.0.0",
+beanie = [
+    "fastapi-users-db-beanie >=1.0.0",
 ]
 oauth = [
-    "httpx-oauth >=0.4,<0.5"
+    "httpx-oauth >=0.4,<0.12"
 ]
 redis = [
-    "aioredis >=2.0.1,<2.1.0",
-    "hiredis >=2.0.0,<2.1.0",
+    "redis >=4.3.3,<5.0.0",
 ]
 
 [project.urls]
 Documentation = "https://fastapi-users.github.io/fastapi-users/"
+Source = "https://github.com/fastapi-users/fastapi-users"

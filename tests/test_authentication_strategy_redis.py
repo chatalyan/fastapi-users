@@ -5,6 +5,7 @@ import pytest
 
 from fastapi_users.authentication.strategy import RedisStrategy
 from fastapi_users.settings import TOKEN_LIFETIME
+from tests.conftest import IDType, UserModel
 
 
 class RedisMock:
@@ -48,46 +49,52 @@ def redis_strategy(redis):
 @pytest.mark.authentication
 class TestReadToken:
     @pytest.mark.asyncio
-    async def test_missing_token(self, redis_strategy: RedisStrategy, user_manager):
+    async def test_missing_token(
+        self, redis_strategy: RedisStrategy[UserModel, IDType], user_manager
+    ):
         authenticated_user = await redis_strategy.read_token(None, user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
-    async def test_invalid_token(self, redis_strategy: RedisStrategy, user_manager):
+    async def test_invalid_token(
+        self, redis_strategy: RedisStrategy[UserModel, IDType], user_manager
+    ):
         authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token_invalid_uuid(
         self,
-        redis_strategy: RedisStrategy,
+        redis_strategy: RedisStrategy[UserModel, IDType],
         redis: RedisMock,
         user_manager,
     ):
-        await redis.set("TOKEN", "bar")
+        await redis.set(f"{redis_strategy.key_prefix}TOKEN", "bar")
         authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token_not_existing_user(
         self,
-        redis_strategy: RedisStrategy,
+        redis_strategy: RedisStrategy[UserModel, IDType],
         redis: RedisMock,
         user_manager,
     ):
-        await redis.set("TOKEN", "d35d213e-f3d8-4f08-954a-7e0d1bea286f")
+        await redis.set(
+            f"{redis_strategy.key_prefix}TOKEN", "d35d213e-f3d8-4f08-954a-7e0d1bea286f"
+        )
         authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token(
         self,
-        redis_strategy: RedisStrategy,
+        redis_strategy: RedisStrategy[UserModel, IDType],
         redis: RedisMock,
         user_manager,
         user,
     ):
-        await redis.set("TOKEN", str(user.id))
+        await redis.set(f"{redis_strategy.key_prefix}TOKEN", str(user.id))
         authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
         assert authenticated_user is not None
         assert authenticated_user.id == user.id
@@ -95,18 +102,22 @@ class TestReadToken:
 
 @pytest.mark.authentication
 @pytest.mark.asyncio
-async def test_write_token(redis_strategy: RedisStrategy, redis: RedisMock, user):
+async def test_write_token(
+    redis_strategy: RedisStrategy[UserModel, IDType], redis: RedisMock, user
+):
     token = await redis_strategy.write_token(user)
 
-    value = await redis.get(token)
+    value = await redis.get(f"{redis_strategy.key_prefix}{token}")
     assert value == str(user.id)
 
 
 @pytest.mark.authentication
 @pytest.mark.asyncio
-async def test_destroy_token(redis_strategy: RedisStrategy, redis: RedisMock, user):
-    await redis.set("TOKEN", str(user.id))
+async def test_destroy_token(
+    redis_strategy: RedisStrategy[UserModel, IDType], redis: RedisMock, user
+):
+    await redis.set(f"{redis_strategy.key_prefix}TOKEN", str(user.id))
 
     await redis_strategy.destroy_token("TOKEN", user)
 
-    assert await redis.get("TOKEN") is None
+    assert await redis.get(f"{redis_strategy.key_prefix}TOKEN") is None

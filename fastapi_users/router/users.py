@@ -1,26 +1,17 @@
-from typing import Type
+from typing import Any, Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from pydantic import UUID4
 
-from fastapi_users import models
+from fastapi_users import exceptions, models, schemas
 from fastapi_users.authentication import Authenticator
-from fastapi_users.manager import (
-    BaseUserManager,
-    InvalidPasswordException,
-    UserAlreadyExists,
-    UserHasLinkedOAuthAccount,
-    UserManagerDependency,
-    UserNotExists,
-)
+from fastapi_users.manager import BaseUserManager, UserManagerDependency
 from fastapi_users.router.common import ErrorCode, ErrorModel
 
 
 def get_users_router(
-    get_user_manager: UserManagerDependency[models.UC, models.UD],
-    user_model: Type[models.U],
-    user_update_model: Type[models.UU],
-    user_db_model: Type[models.UD],
+    get_user_manager: UserManagerDependency[models.UP, models.ID],
+    user_schema: Type[schemas.U],
+    user_update_schema: Type[schemas.UU],
     authenticator: Authenticator,
     requires_verification: bool = False,
 ) -> APIRouter:
@@ -35,17 +26,18 @@ def get_users_router(
     )
 
     async def get_user_or_404(
-        id: UUID4,
-        user_manager: BaseUserManager[models.UC, models.UD] = Depends(get_user_manager),
-    ) -> models.UD:
+        id: Any,
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+    ) -> models.UP:
         try:
-            return await user_manager.get(id)
-        except UserNotExists:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            parsed_id = user_manager.parse_id(id)
+            return await user_manager.get(parsed_id)
+        except (exceptions.UserNotExists, exceptions.InvalidID) as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
     @router.get(
         "/me",
-        response_model=user_model,
+        response_model=user_schema,
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 "description": "Missing token or inactive user.",
@@ -53,13 +45,13 @@ def get_users_router(
         },
     )
     async def me(
-        user: user_db_model = Depends(get_current_active_user),  # type: ignore
+        user: models.UP = Depends(get_current_active_user),
     ):
-        return user
+        return user_schema.from_orm(user)
 
     @router.patch(
         "/me",
-        response_model=user_model,
+        response_model=user_schema,
         dependencies=[Depends(get_current_active_user)],
         responses={
             status.HTTP_401_UNAUTHORIZED: {
@@ -100,15 +92,16 @@ def get_users_router(
     )
     async def update_me(
         request: Request,
-        user_update: user_update_model,  # type: ignore
-        user: user_db_model = Depends(get_current_active_user),  # type: ignore
-        user_manager: BaseUserManager[models.UC, models.UD] = Depends(get_user_manager),
+        user_update: user_update_schema,  # type: ignore
+        user: models.UP = Depends(get_current_active_user),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
     ):
         try:
-            return await user_manager.update(
+            user = await user_manager.update(
                 user_update, user, safe=True, request=request
             )
-        except InvalidPasswordException as e:
+            return user_schema.from_orm(user)
+        except exceptions.InvalidPasswordException as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
@@ -116,7 +109,7 @@ def get_users_router(
                     "reason": e.reason,
                 },
             )
-        except UserAlreadyExists:
+        except exceptions.UserAlreadyExists:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
@@ -128,8 +121,8 @@ def get_users_router(
             )
 
     @router.get(
-        "/{id:uuid}",
-        response_model=user_model,
+        "/{id}",
+        response_model=user_schema,
         dependencies=[Depends(get_current_superuser)],
         responses={
             status.HTTP_401_UNAUTHORIZED: {
@@ -144,11 +137,11 @@ def get_users_router(
         },
     )
     async def get_user(user=Depends(get_user_or_404)):
-        return user
+        return user_schema.from_orm(user)
 
     @router.patch(
-        "/{id:uuid}",
-        response_model=user_model,
+        "/{id}",
+        response_model=user_schema,
         dependencies=[Depends(get_current_superuser)],
         responses={
             status.HTTP_401_UNAUTHORIZED: {
@@ -188,16 +181,17 @@ def get_users_router(
         },
     )
     async def update_user(
-        user_update: user_update_model,  # type: ignore
+        user_update: user_update_schema,  # type: ignore
         request: Request,
         user=Depends(get_user_or_404),
-        user_manager: BaseUserManager[models.UC, models.UD] = Depends(get_user_manager),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
     ):
         try:
-            return await user_manager.update(
+            user = await user_manager.update(
                 user_update, user, safe=False, request=request
             )
-        except InvalidPasswordException as e:
+            return user_schema.from_orm(user)
+        except exceptions.InvalidPasswordException as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
@@ -205,14 +199,14 @@ def get_users_router(
                     "reason": e.reason,
                 },
             )
-        except UserAlreadyExists:
+        except exceptions.UserAlreadyExists:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
             )
 
     @router.delete(
-        "/{id:uuid}",
+        "/{id}",
         status_code=status.HTTP_204_NO_CONTENT,
         response_class=Response,
         dependencies=[Depends(get_current_superuser)],
@@ -230,7 +224,7 @@ def get_users_router(
     )
     async def delete_user(
         user=Depends(get_user_or_404),
-        user_manager: BaseUserManager[models.UC, models.UD] = Depends(get_user_manager),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
     ):
         await user_manager.delete(user)
         return None

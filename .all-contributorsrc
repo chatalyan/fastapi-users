@@ -265,7 +265,8 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/80227316?v=4",
       "profile": "https://github.com/sandalwoodbox",
       "contributions": [
-        "bug"
+        "bug",
+        "doc"
       ]
     },
     {
@@ -480,6 +481,161 @@
       "contributions": [
         "platform"
       ]
+    },
+    {
+      "login": "gaganpreet",
+      "name": "Gaganpreet",
+      "avatar_url": "https://avatars.githubusercontent.com/u/815873?v=4",
+      "profile": "https://gaganpreet.in/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "jtv8",
+      "name": "Joe Taylor",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29302451?v=4",
+      "profile": "https://github.com/jtv8",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ricfri",
+      "name": "Richard Friberg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/21967765?v=4",
+      "profile": "https://github.com/ricfri",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "KentonParton",
+      "name": "Kenton Parton",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20202312?v=4",
+      "profile": "http://www.kentonparton.com",
+      "contributions": [
+        "financial"
+      ]
+    },
+    {
+      "login": "Qwizi",
+      "name": "Adrian Ciołek",
+      "avatar_url": "https://avatars.githubusercontent.com/u/23024321?v=4",
+      "profile": "https://github.com/Qwizi",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "killswitch-GUI",
+      "name": "⭕Alexander Rymdeko-Harvey",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8761706?v=4",
+      "profile": "https://blog.obscuritylabs.com",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "schwannden",
+      "name": "schwannden",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5753086?v=4",
+      "profile": "http://schwannden.com",
+      "contributions": [
+        "maintenance",
+        "code"
+      ]
+    },
+    {
+      "login": "JimScope",
+      "name": "Jimmy Angel Pérez Díaz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/27647007?v=4",
+      "profile": "https://jimscope.is-a.dev",
+      "contributions": [
+        "security"
+      ]
+    },
+    {
+      "login": "austinorr",
+      "name": "Austin Orr",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8422403?v=4",
+      "profile": "http://austinmartinorr.com",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "carloe",
+      "name": "Carlo Eugster",
+      "avatar_url": "https://avatars.githubusercontent.com/u/299107?v=4",
+      "profile": "http://carlo.io",
+      "contributions": [
+        "security"
+      ]
+    },
+    {
+      "login": "vittoriozamboni",
+      "name": "Vittorio Zamboni",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1734279?v=4",
+      "profile": "http://www.vzamboni.io",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "aryadovoy",
+      "name": "Andrey",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26593349?v=4",
+      "profile": "https://github.com/aryadovoy",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "caniko",
+      "name": "Can H. Tartanoglu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29519599?v=4",
+      "profile": "http://linkedin.com/in/canhtartanoglu",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "flipee",
+      "name": "Filipe Nascimento",
+      "avatar_url": "https://avatars.githubusercontent.com/u/22459623?v=4",
+      "profile": "https://github.com/flipee",
+      "contributions": [
+        "security"
+      ]
+    },
+    {
+      "login": "hgalytoby",
+      "name": "dudulu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50397689?v=4",
+      "profile": "https://duduru.website/",
+      "contributions": [
+        "financial"
+      ]
+    },
+    {
+      "login": "antont",
+      "name": "Toni Alatalo",
+      "avatar_url": "https://avatars.githubusercontent.com/u/201016?v=4",
+      "profile": "https://github.com/antont",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "bkis",
+      "name": "Börge Kiss",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9215743?v=4",
+      "profile": "https://bkis.github.io",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -487,5 +643,6 @@
   "projectOwner": "fastapi-users",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": true,
+  "commitConvention": "angular"
 }

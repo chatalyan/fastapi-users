@@ -3,22 +3,30 @@ site_description: Ready-to-use and customizable users management for FastAPI
 
 theme:
   name: 'material'
+  custom_dir: docs-overrides
   palette:
     - scheme: default
       primary: 'red'
       accent: 'red'
       toggle:
-          icon: material/lightbulb
+          icon: material/weather-sunny
           name: Switch to dark mode
     - scheme: slate
       primary: 'red'
       accent: 'red'
       toggle:
-          icon: material/lightbulb-outline
+          icon: material/weather-night
           name: Switch to light mode
   icon:
     logo: material/account-supervisor
   favicon: 'favicon.png'
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.annotate
 
 repo_name: frankie567/fastapi-users
 repo_url: https://github.com/fastapi-users/fastapi-users
@@ -28,41 +36,43 @@ markdown_extensions:
   - toc:
       permalink: true
   - admonition
-  - codehilite
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:mermaid2.fence_mermaid
-  - pymdownx.tasklist
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.snippets
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
+  - attr_list
+  - tables
+  - def_list
 
 plugins:
   - search
-  - mermaid2:
-      arguments:
-        theme: |
-          ^(JSON.parse(window.localStorage.getItem('/.__palette')).index == 1) ? 'dark' : 'light'
+  - mike
 
-extra_javascript:
-    - https://unpkg.com/mermaid/dist/mermaid.min.js
+extra:
+  version:
+    provider: mike
 
 nav:
   - About: index.md
   - installation.md
   - Configuration:
     - configuration/overview.md
-    - configuration/models.md
-    - Database adapters:
+    - User model and databases:
       - configuration/databases/sqlalchemy.md
-      - configuration/databases/mongodb.md
-      - configuration/databases/tortoise.md
-      - configuration/databases/ormar.md
+      - configuration/databases/beanie.md
     - Authentication backends:
       - Introduction: configuration/authentication/index.md
       - Transports:
@@ -74,6 +84,7 @@ nav:
         - configuration/authentication/strategies/redis.md
       - configuration/authentication/backend.md
     - configuration/user-manager.md
+    - configuration/schemas.md
     - Routers:
       - Introduction: configuration/routers/index.md
       - configuration/routers/auth.md
@@ -83,6 +94,7 @@ nav:
       - configuration/routers/users.md
     - configuration/full-example.md
     - configuration/oauth.md
+    - configuration/password-hash.md
   - Usage:
     - usage/flow.md
     - usage/routes.md
@@ -98,3 +110,4 @@ nav:
     - migration/6x_to_7x.md
     - migration/7x_to_8x.md
     - migration/8x_to_9x.md
+    - migration/9x_to_10x.md

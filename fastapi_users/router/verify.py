@@ -3,21 +3,14 @@ from typing import Type
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 
-from fastapi_users import models
-from fastapi_users.manager import (
-    BaseUserManager,
-    InvalidVerifyToken,
-    UserAlreadyVerified,
-    UserInactive,
-    UserManagerDependency,
-    UserNotExists,
-)
+from fastapi_users import exceptions, models, schemas
+from fastapi_users.manager import BaseUserManager, UserManagerDependency
 from fastapi_users.router.common import ErrorCode, ErrorModel
 
 
 def get_verify_router(
-    get_user_manager: UserManagerDependency[models.UC, models.UD],
-    user_model: Type[models.U],
+    get_user_manager: UserManagerDependency[models.UP, models.ID],
+    user_schema: Type[schemas.U],
 ):
     router = APIRouter()
 
@@ -28,19 +21,23 @@ def get_verify_router(
     async def request_verify_token(
         request: Request,
         email: EmailStr = Body(..., embed=True),
-        user_manager: BaseUserManager[models.UC, models.UD] = Depends(get_user_manager),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
     ):
         try:
             user = await user_manager.get_by_email(email)
             await user_manager.request_verify(user, request)
-        except (UserNotExists, UserInactive, UserAlreadyVerified):
+        except (
+            exceptions.UserNotExists,
+            exceptions.UserInactive,
+            exceptions.UserAlreadyVerified,
+        ):
             pass
 
         return None
 
     @router.post(
         "/verify",
-        response_model=user_model,
+        response_model=user_schema,
         responses={
             status.HTTP_400_BAD_REQUEST: {
                 "model": ErrorModel,
@@ -67,16 +64,16 @@ def get_verify_router(
     async def verify(
         request: Request,
         token: str = Body(..., embed=True),
-        user_manager: BaseUserManager[models.UC, models.UD] = Depends(get_user_manager),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
     ):
         try:
             return await user_manager.verify(token, request)
-        except (InvalidVerifyToken, UserNotExists):
+        except (exceptions.InvalidVerifyToken, exceptions.UserNotExists):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.VERIFY_USER_BAD_TOKEN,
             )
-        except UserAlreadyVerified:
+        except exceptions.UserAlreadyVerified:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.VERIFY_USER_ALREADY_VERIFIED,

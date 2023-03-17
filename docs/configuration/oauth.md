@@ -7,15 +7,11 @@ FastAPI Users provides an optional OAuth2 authentication support. It relies on [
 You should install the library with the optional dependencies for OAuth:
 
 ```sh
-pip install 'fastapi-users[sqlalchemy2,oauth]'
+pip install 'fastapi-users[sqlalchemy,oauth]'
 ```
 
 ```sh
-pip install 'fastapi-users[mongodb,oauth]'
-```
-
-```sh
-pip install 'fastapi-users[tortoise-orm,oauth]'
+pip install 'fastapi-users[beanie,oauth]'
 ```
 
 ## Configuration
@@ -30,90 +26,125 @@ from httpx_oauth.clients.google import GoogleOAuth2
 google_oauth_client = GoogleOAuth2("CLIENT_ID", "CLIENT_SECRET")
 ```
 
-### Setup the models
-
-The user models differ a bit from the standard one as we have to have a way to store the OAuth information (access tokens, account ids...).
-
-```py
-from fastapi_users import models
-
-
-class User(models.BaseUser, models.BaseOAuthAccountMixin):
-    pass
-
-
-class UserCreate(models.BaseUserCreate):
-    pass
-
-
-class UserUpdate(models.BaseUserUpdate):
-    pass
-
-
-class UserDB(User, models.BaseUserDB):
-    pass
-```
-
-Notice that we inherit from the `BaseOAuthAccountMixin`, which adds a `List` of `BaseOAuthAccount` objects. This object is structured like this:
-
-* `id` (`UUID4`) – Unique identifier of the OAuth account information. Defaults to a **UUID4**.
-* `oauth_name` (`str`) – Name of the OAuth service. It corresponds to the `name` property of the OAuth client.
-* `access_token` (`str`) – Access token.
-* `expires_at` (`Optional[int]`) - Timestamp at which the access token is expired.
-* `refresh_token` (`Optional[str]`) – On services that support it, a token to get a fresh access token.
-* `account_id` (`str`) - Identifier of the OAuth account on the corresponding service.
-* `account_email` (`str`) - Email address of the OAuth account on the corresponding service.
-
 ### Setup the database adapter
 
 #### SQLAlchemy
 
 You'll need to define the SQLAlchemy model for storing OAuth accounts. We provide a base one for this:
 
-```py hl_lines="19-24"
+```py hl_lines="5 19-20 24-26 43-44"
 --8<-- "docs/src/db_sqlalchemy_oauth.py"
 ```
 
-Notice that we also manually added a `relationship` on the `UserTable` so that SQLAlchemy can properly retrieve the OAuth accounts of the user.
+Notice that we also manually added a `relationship` on `User` so that SQLAlchemy can properly retrieve the OAuth accounts of the user.
 
-When instantiating the database adapter, you should pass this SQLAlchemy model:
+Besides, when instantiating the database adapter, we need pass this SQLAlchemy model as third argument.
 
-```py hl_lines="41-42"
---8<-- "docs/src/db_sqlalchemy_oauth.py"
+!!! tip "Primary key is defined as UUID"
+    By default, we use UUID as a primary key ID for your user. If you want to use another type, like an auto-incremented integer, you can use `SQLAlchemyBaseOAuthAccountTable` as base class and define your own `id` and `user_id` column.
+
+    ```py
+    class OAuthAccount(SQLAlchemyBaseOAuthAccountTable[int], Base):
+        id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+        @declared_attr
+        def user_id(cls) -> Mapped[int]:
+            return mapped_column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
+
+    ```
+
+    Notice that `SQLAlchemyBaseOAuthAccountTable` expects a generic type to define the actual type of ID you use.
+
+#### Beanie
+
+The advantage of MongoDB is that you can easily embed sub-objects in a single document. That's why the configuration for Beanie is quite simple. All we need to do is to define another class to structure an OAuth account object.
+
+```py hl_lines="5 15-16 20"
+--8<-- "docs/src/db_beanie_oauth.py"
 ```
 
-#### MongoDB
+It's worth to note that `OAuthAccount` is **not a Beanie document** but a Pydantic model that we'll embed inside the `User` document, through the `oauth_accounts` array.
 
-Nothing to do, the [basic configuration](./databases/mongodb.md) is enough.
-
-#### Tortoise ORM
-
-You'll need to define the Tortoise model for storing the OAuth account model. We provide a base one for this:
-
-```py hl_lines="29 30"
---8<-- "docs/src/db_tortoise_oauth_model.py"
-```
-
-!!! warning
-    Note that you should define the foreign key yourself, so that you can point it the user model in your namespace.
-
-Then, you should declare it on the database adapter:
-
-```py hl_lines="8 9"
---8<-- "docs/src/db_tortoise_oauth_adapter.py"
-```
-
-### Generate a router
+### Generate routers
 
 Once you have a `FastAPIUsers` instance, you can make it generate a single OAuth router for a given client **and** authentication backend.
 
 ```py
 app.include_router(
-  fastapi_users.get_oauth_router(google_oauth_client, auth_backend, "SECRET"),
-  prefix="/auth/google",
-  tags=["auth"],
+    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, "SECRET"),
+    prefix="/auth/google",
+    tags=["auth"],
 )
 ```
+
+!!! tip
+    If you have several OAuth clients and/or several authentication backends, you'll need to create a router for each pair you want to support.
+
+#### Existing account association
+
+If a user with the same e-mail address already exists, an HTTP 400 error will be raised by default.
+
+You can however choose to automatically link this OAuth account to the existing user account by setting the `associate_by_email` flag:
+
+```py
+app.include_router(
+    fastapi_users.get_oauth_router(
+        google_oauth_client,
+        auth_backend,
+        "SECRET",
+        associate_by_email=True,
+    ),
+    prefix="/auth/google",
+    tags=["auth"],
+)
+```
+
+Bear in mind though that it can lead to security breaches if the OAuth provider does not validate e-mail addresses. How?
+
+* Let's say your app support an OAuth provider, *Merlinbook*, which does not validate e-mail addresses.
+* Imagine a user registers to your app with the e-mail address `lancelot@camelot.bt`.
+* Now, a malicious user creates an account on *Merlinbook* with the same e-mail address. Without e-mail validation, the malicious user can use this account without limitation.
+* The malicious user authenticates using *Merlinbook* OAuth on your app, which automatically associates to the existing `lancelot@camelot.bt`.
+* Now, the malicious user has full access to the user account on your app 😞
+
+#### Association router for authenticated users
+
+We also provide a router to associate an already authenticated user with an OAuth account. After this association, the user will be able to authenticate with this OAuth provider.
+
+```py
+app.include_router(
+    fastapi_users.get_oauth_associate_router(google_oauth_client, UserRead, "SECRET"),
+    prefix="/auth/associate/google",
+    tags=["auth"],
+)
+```
+
+Notice that, just like for the [Users router](./routers/users.md), you have to pass the `UserRead` Pydantic schema.
+
+#### Set `is_verified` to `True` by default
+
+!!! tip "This section is only useful if you set up email verification"
+    You can read more about this feature [here](./routers/verify.md).
+
+When a new user registers with an OAuth provider, the `is_verified` flag is set to `False`, which requires the user to verify its email address.
+
+You can choose to trust the email address given by the OAuth provider and set the `is_verified` flag to `True` after registration. You can do this by setting the `is_verified_by_default` argument:
+
+```py
+app.include_router(
+    fastapi_users.get_oauth_router(
+        google_oauth_client,
+        auth_backend,
+        "SECRET",
+        is_verified_by_default=True,
+    ),
+    prefix="/auth/google",
+    tags=["auth"],
+)
+```
+
+!!! danger "Make sure you can trust the OAuth provider"
+    Make sure the OAuth provider you're using **does verify** the email address before enabling this flag.
 
 ### Full example
 
@@ -123,120 +154,80 @@ app.include_router(
 
 #### SQLAlchemy
 
-[Open :octicons-link-external-16:](https://github.com/fastapi-users/fastapi-users/tree/master/examples/sqlalchemy-oauth)
+[Open :material-open-in-new:](https://github.com/fastapi-users/fastapi-users/tree/master/examples/sqlalchemy-oauth)
 
-=== ":octicons-file-code-16: requirements.txt"
+=== "requirements.txt"
 
     ```
     --8<-- "examples/sqlalchemy-oauth/requirements.txt"
     ```
 
-=== ":octicons-file-code-16: main.py"
+=== "main.py"
 
     ```py
     --8<-- "examples/sqlalchemy-oauth/main.py"
     ```
 
-=== ":octicons-file-code-16: app/app.py"
+=== "app/app.py"
 
     ```py
     --8<-- "examples/sqlalchemy-oauth/app/app.py"
     ```
 
-=== ":octicons-file-code-16: app/db.py"
+=== "app/db.py"
 
     ```py
     --8<-- "examples/sqlalchemy-oauth/app/db.py"
     ```
 
-=== ":octicons-file-code-16: app/models.py"
+=== "app/schemas.py"
 
     ```py
-    --8<-- "examples/sqlalchemy-oauth/app/models.py"
+    --8<-- "examples/sqlalchemy-oauth/app/schemas.py"
     ```
 
-=== ":octicons-file-code-16: app/users.py"
+=== "app/users.py"
 
     ```py
     --8<-- "examples/sqlalchemy-oauth/app/users.py"
     ```
 
-#### MongoDB
+#### Beanie
 
-[Open :octicons-link-external-16:](https://github.com/fastapi-users/fastapi-users/tree/master/examples/mongodb-oauth)
+[Open :material-open-in-new:](https://github.com/fastapi-users/fastapi-users/tree/master/examples/beanie-oauth)
 
-=== ":octicons-file-code-16: requirements.txt"
+=== "requirements.txt"
 
     ```
-    --8<-- "examples/mongodb-oauth/requirements.txt"
+    --8<-- "examples/beanie-oauth/requirements.txt"
     ```
 
-=== ":octicons-file-code-16: main.py"
+=== "main.py"
 
     ```py
-    --8<-- "examples/mongodb-oauth/main.py"
+    --8<-- "examples/beanie-oauth/main.py"
     ```
 
-=== ":octicons-file-code-16: app/app.py"
+=== "app/app.py"
 
     ```py
-    --8<-- "examples/mongodb-oauth/app/app.py"
+    --8<-- "examples/beanie-oauth/app/app.py"
     ```
 
-=== ":octicons-file-code-16: app/db.py"
+=== "app/db.py"
 
     ```py
-    --8<-- "examples/mongodb-oauth/app/db.py"
+    --8<-- "examples/beanie-oauth/app/db.py"
     ```
 
-=== ":octicons-file-code-16: app/models.py"
+=== "app/schemas.py"
 
     ```py
-    --8<-- "examples/mongodb-oauth/app/models.py"
+    --8<-- "examples/beanie-oauth/app/schemas.py"
     ```
 
-=== ":octicons-file-code-16: app/users.py"
+=== "app/users.py"
 
     ```py
-    --8<-- "examples/mongodb-oauth/app/users.py"
-    ```
-
-#### Tortoise ORM
-
-[Open :octicons-link-external-16:](https://github.com/fastapi-users/fastapi-users/tree/master/examples/tortoise-oauth)
-
-=== ":octicons-file-code-16: requirements.txt"
-
-    ```
-    --8<-- "examples/tortoise-oauth/requirements.txt"
-    ```
-
-=== ":octicons-file-code-16: main.py"
-
-    ```py
-    --8<-- "examples/tortoise-oauth/main.py"
-    ```
-
-=== ":octicons-file-code-16: app/app.py"
-
-    ```py
-    --8<-- "examples/tortoise-oauth/app/app.py"
-    ```
-
-=== ":octicons-file-code-16: app/db.py"
-
-    ```py
-    --8<-- "examples/tortoise-oauth/app/db.py"
-    ```
-
-=== ":octicons-file-code-16: app/models.py"
-
-    ```py
-    --8<-- "examples/tortoise-oauth/app/models.py"
-    ```
-
-=== ":octicons-file-code-16: app/users.py"
-
-    ```py
-    --8<-- "examples/tortoise-oauth/app/users.py"
+    --8<-- "examples/beanie-oauth/app/users.py"
     ```
