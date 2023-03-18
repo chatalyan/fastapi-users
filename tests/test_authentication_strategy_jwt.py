@@ -64,11 +64,17 @@ def jwt_strategy(request, secret: SecretType):
         return JWTStrategy(secret, TOKEN_LIFETIME)
     elif request.param == "RS256":
         return JWTStrategy(
-            RSA_PRIVATE_KEY, TOKEN_LIFETIME, algorithm="RS256", public_key=RSA_PUBLIC_KEY
+            RSA_PRIVATE_KEY,
+            TOKEN_LIFETIME,
+            algorithm="RS256",
+            public_key=RSA_PUBLIC_KEY,
         )
     elif request.param == "ES256":
         return JWTStrategy(
-            ECC_PRIVATE_KEY, TOKEN_LIFETIME, algorithm="ES256", public_key=ECC_PUBLIC_KEY
+            ECC_PRIVATE_KEY,
+            TOKEN_LIFETIME,
+            algorithm="ES256",
+            public_key=ECC_PUBLIC_KEY,
         )
     raise ValueError(f"Unrecognized algorithm: {request.param}")
 

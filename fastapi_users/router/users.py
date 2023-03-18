@@ -114,7 +114,7 @@ def get_users_router(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
             )
-        except UserHasLinkedOAuthAccount:
+        except exceptions.UserHasLinkedOAuthAccount:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_USER_HAS_LINKED_OAUTH_ACCOUNT,

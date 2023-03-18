@@ -2,7 +2,6 @@ from fastapi_users.db.base import BaseUserDatabase, UserDatabaseDependency
 
 __all__ = ["BaseUserDatabase", "UserDatabaseDependency"]
 
-
 try:  # pragma: no cover
     from fastapi_users_db_sqlalchemy import (  # noqa: F401
         SQLAlchemyBaseOAuthAccountTable,

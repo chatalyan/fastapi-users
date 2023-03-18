@@ -60,8 +60,8 @@ def get_oauth_router(
     async def authorize(
         request: Request,
         scopes: List[str] = Query(None),
-        code_challenge: str = None,
-        code_challenge_method: str = None,
+        code_challenge: Optional[str] = None,
+        code_challenge_method: Optional[str] = None,
     ) -> Union[OAuth2AuthorizeResponse, RedirectResponse]:
         if redirect_url is not None:
             authorize_redirect_url = redirect_url
@@ -250,7 +250,7 @@ def get_oauth_associate_router(
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
     ):
         token, state = access_token_state
-        account_id, account_email = await oauth_client.get_id_email(
+        account_id, account_email, extra_data = await oauth_client.get_id_email(
             token["access_token"]
         )
 

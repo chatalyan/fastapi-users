@@ -17,6 +17,10 @@ class UserNotExists(FastAPIUsersException):
     pass
 
 
+class UserHasLinkedOAuthAccount(FastAPIUsersException):
+    pass
+
+
 class UserInactive(FastAPIUsersException):
     pass
 

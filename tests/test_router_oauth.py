@@ -26,8 +26,8 @@ from tests.conftest import (
 def app_factory(secret, get_user_manager_oauth, mock_authentication, oauth_client):
     def _app_factory(
         redirect_url: str = None,
-        follow_redirects: bool = False
-        requires_verification: bool = False
+        follow_redirects: bool = False,
+        requires_verification: bool = False,
     ) -> FastAPI:
         authenticator = Authenticator([mock_authentication], get_user_manager_oauth)
 
@@ -153,7 +153,7 @@ class TestAuthorize:
         )
 
         response = await test_app_client_follow_redirects.get(
-            "/authorize",
+            "/oauth/authorize",
             params={
                 "scopes": ["scope1", "scope2"],
             },
@@ -209,7 +209,9 @@ class TestCallback:
         state_jwt = generate_state_token({}, "SECRET")
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback"
@@ -336,7 +338,7 @@ class TestCallback:
         state_jwt = generate_state_token({}, "SECRET")
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", None)
+            oauth_client, "get_id_email", return_value=("user_oauth1", None, {})
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback", return_value=user_oauth
@@ -466,7 +468,9 @@ class TestAssociateCallback:
     ):
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         get_id_email_mock = async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
 
         response = await test_app_client.get(
@@ -490,7 +494,9 @@ class TestAssociateCallback:
         state_jwt = generate_state_token({"sub": str(user.id)}, "SECRET")
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         get_id_email_mock = async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
 
         response = await test_app_client.get(
@@ -514,7 +520,9 @@ class TestAssociateCallback:
         state_jwt = generate_state_token({"sub": str(user_oauth.id)}, "SECRET")
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback", return_value=user_oauth
@@ -545,7 +553,9 @@ class TestAssociateCallback:
             oauth_client, "get_access_token", return_value=access_token
         )
         async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
+            oauth_client,
+            "get_id_email",
+            return_value=("user_oauth1", user_oauth.email, {}),
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback", return_value=user_oauth
@@ -578,7 +588,7 @@ class TestAssociateCallback:
         state_jwt = generate_state_token({"sub": str(user_oauth.id)}, "SECRET")
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
-            oauth_client, "get_id_email", return_value=("user_oauth1", None)
+            oauth_client, "get_id_email", return_value=("user_oauth1", None, {})
         )
         async_method_mocker(
             user_manager_oauth, "oauth_callback", return_value=user_oauth

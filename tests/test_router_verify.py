@@ -62,6 +62,17 @@ class TestVerifyTokenRequest:
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert user_manager.request_verify.called is False
 
+    async def test_user_has_linked_oauth_account(
+        self,
+        test_app_client: httpx.AsyncClient,
+        user_manager: UserManagerMock,
+    ):
+        user_manager.get_by_email.side_effect = UserNotExists()
+        json = {"email": "user@example.com"}
+        response = await test_app_client.post("/request-verify-token", json=json)
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert user_manager.request_verify.called is False
+
     async def test_user_inactive(
         self,
         async_method_mocker: AsyncMethodMocker,

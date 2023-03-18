@@ -6,7 +6,13 @@ from fastapi import FastAPI, status
 
 from fastapi_users.authentication import Authenticator
 from fastapi_users.router import ErrorCode, get_users_router
-from tests.conftest import User, UserModel, UserUpdate, get_mock_authentication
+from tests.conftest import (
+    User,
+    UserModel,
+    UserOAuthModel,
+    UserUpdate,
+    get_mock_authentication,
+)
 
 
 @pytest.fixture
@@ -389,15 +395,14 @@ class TestUpdateMe:
     async def test_change_email_to_oauth_linked_account(
         self,
         test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_oauth: UserDB,
+        user_oauth: UserOAuthModel,
     ):
         client, requires_verification = test_app_client
         response = await client.patch(
             "/me",
-            json={"email": "king.arthur.2@camelot.bt"},
+            json={"email": "lake.lady.2@camelot.bt"},
             headers={"Authorization": f"Bearer {user_oauth.id}"},
         )
-        print(user_oauth)
         if requires_verification:
             assert response.status_code == status.HTTP_403_FORBIDDEN
         else:

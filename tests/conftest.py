@@ -38,7 +38,6 @@ viviane_password_hash = password_helper.hash("viviane")
 lancelot_password_hash = password_helper.hash("lancelot")
 excalibur_password_hash = password_helper.hash("excalibur")
 
-
 IDType = uuid.UUID
 
 
@@ -51,6 +50,8 @@ class UserModel(models.UserProtocol[IDType]):
     is_superuser: bool = False
     is_verified: bool = False
     first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    picture: Optional[str] = None
 
 
 @dataclasses.dataclass

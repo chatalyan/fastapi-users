@@ -1,5 +1,4 @@
 import sys
-from datetime import datetime
 from typing import Generic, List, Optional, TypeVar
 
 if sys.version_info < (3, 8):

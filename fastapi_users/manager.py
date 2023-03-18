@@ -93,7 +93,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
 
         return user
 
-    async def has_user_linked_oauth_account(self, id: UUID4) -> bool:
+    async def has_user_linked_oauth_account(self, id: models.ID) -> bool:
         """
         Check if a user has linked an oauth account.
 
@@ -166,8 +166,8 @@ class BaseUserManager(Generic[models.UP, models.ID]):
         account_email: str,
         expires_at: Optional[int] = None,
         refresh_token: Optional[str] = None,
-        extra_data: Dict = None,
         request: Optional[Request] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
         *,
         associate_by_email: bool = False,
         is_verified_by_default: bool = False,
@@ -212,8 +212,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
         }
 
         try:
-            if extra_data is None:
-                extra_data = {}
+            extra_data = extra_data or {}
             user = await self.get_by_oauth_account(oauth_name, account_id)
         except exceptions.UserNotExists:
             try:
@@ -233,12 +232,16 @@ class BaseUserManager(Generic[models.UP, models.ID]):
 
                 if extra_data.get("first_name") is not None:
                     user_dict["first_name"] = extra_data.get("first_name")
+
                 if extra_data.get("last_name") is not None:
                     user_dict["last_name"] = extra_data.get("last_name")
-                if (
-                    extra_data.get("picture", {}).get("url") is not None
-                    and extra_data.get("picture", {}).get("default") in [False, None]
-                ):
+
+                if extra_data.get("picture", {}).get(
+                    "url"
+                ) is not None and extra_data.get("picture", {}).get("default") in [
+                    False,
+                    None,
+                ]:
                     user_dict["picture"] = extra_data.get("picture").get("url")
 
                 user = await self.user_db.create(user_dict)
